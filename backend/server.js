@@ -46,19 +46,20 @@ async function start() {
     app.use('/api/dashboard', dashboardRoutes);
     app.use('/api/users', userRoutes);
 
-    // Serve frontend static files in production
+    // Serve frontend build (in production)
     if (process.env.NODE_ENV === 'production') {
-      app.use(express.static(path.join(__dirname, '../frontend/dist')));
+      const frontendDistPath = path.join(__dirname, '../frontend/dist');
+      app.use(express.static(frontendDistPath));
 
-      // Handle React routing - send all non-API requests to index.html
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+      // Catch-all route to serve index.html for client-side routing
+      app.use((req, res) => {
+        res.sendFile(path.join(frontendDistPath, 'index.html'));
       });
+    } else {
+      // Error handling middleware (only in development)
+      app.use(notFound);
+      app.use(errorHandler);
     }
-
-    // Error handling middleware
-    app.use(notFound);
-    app.use(errorHandler);
 
     app.listen(port, () => {
       console.log(`🚀 Server listening on port ${port}`);
